@@ -9,6 +9,7 @@ require('dotenv').config()
 
 //tell express to use cors and body-parser
 app.use(cors())
+app.use(bodyParser.urlencoded({extended: false}))
 app.use(bodyParser.json())
 
 //connect to mongoDb
@@ -28,7 +29,7 @@ mongoose.connection.on('error',(err)=>{
 //route and run
 const port = process.env.PORT ||3000
 const routes = require('./routers/routes')
-app.use(routes)
+app.use('/api',routes)
 app.listen(port, () => {
     console.log("server running at port " + port);
     
