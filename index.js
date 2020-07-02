@@ -28,7 +28,7 @@ mongoose.connection.on('error',(err)=>{
 //route and run
 const port = process.env.PORT ||3000
 const routes = require('./routers/routes')
-app.use('/api',routes)
+app.use(routes)
 app.listen(port, () => {
     console.log("server running at port " + port);
     
