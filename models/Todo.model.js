@@ -15,16 +15,14 @@ const todoShcema = new Shema({
         minlength:5,
         trim:true,
     },
-    done:{
-        type:Boolean,
-        required: true,
-    },
     priority:{
         type: Number,
         required: true,
         min:0,
         max:10,
     }
+},{
+    timestamps:true
 })
 
 // add to mongoose model

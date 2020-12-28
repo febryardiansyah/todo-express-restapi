@@ -2,63 +2,119 @@ const router = require('express').Router()
 const Todo = require('../models/Todo.model')
 
 //get all todo list
-router.get('/',(req,res) =>{
-    Todo.find().then((todo) =>{
-        res.json({
-            'status':'success',
+router.get('/',async(req,res) =>{
+    try {
+        const todo = await Todo.find();
+        return res.send({
+            'status':true,
             'message':'All todo List',
             'data':todo
         })
-    }).catch((err)=>{
-        res.status(500).json({
-            'status':'error',
+    } catch (error) {
+        return res.status(500).send({
+            'status':false,
             'message':err.message
-        })
-    })
+        })   
+    }
 })
 
 //post todo item
-router.post('/add',(req,res) =>{
-    const {title,description,done,priority} = req.body
-    const newTodo = new Todo({title,description,done,priority})
-
-    newTodo.save()
-    .then(()=>{
-        res.json({
-            'status':'success',
-            'message':'Successfully Added Todo Item'
+router.post('/add',async(req,res) =>{
+    const {title,description,priority} = req.body
+    console.log(req.body);
+    if(!title){
+        return res.status(400).send({
+            status:false,
+            "message": "title must not be empty"
         })
-    }).catch(err =>res.status(400).json({'status':'error', 'message':err.message}))
+    }else if(!description){
+        return res.status(400).send({
+            status:false,
+            "message": "description must not be empty"
+        })
+    }else if(!priority){
+        return res.status(400).send({
+            status:false,
+            "message": "priority must not be empty"
+        })
+    }
+
+    try{
+        const newTodo = new Todo({title,description,priority})
+
+        await newTodo.save({validateBeforeSave:true})
+        return res.send({
+            'status':true,
+            'message':`${title} has successfully added`
+        })
+    }catch(err){
+        return res.status(400).send({'status':false, 'message':err.message})
+    }
 })
 
 //update todo item by id
-router.put('/:id/update', (req, res) =>{
-    var update = req.body
+router.put('/update/:id', async(req, res) =>{
 
-    Todo.findOneAndUpdate({_id:req.params.id},update,{new:true}).then(()=>{
-        res.json({'status':'sucsess','message':'Update Successfully'})
-    }).catch((err)=>{
-        res.json(400).json({
-            'status':'error',
+    try{
+        const item = await Todo.findOneAndUpdate({_id:req.params.id},req.body,{
+            new:true,runValidators:true,
+        })
+        if(!item){
+            return res.status(404).send({
+                'status':false,
+                'message':'Item not found'
+            })
+        }
+        return res.send({'status':true,'message':'Update succsess'})
+
+    }catch(err){
+        return res.status(400).send({
+            'status':false,
             'message':err.message
         })
-    })
+    }
+})
+
+router.get('/item/:id',async(req,res)=>{
+    const id = req.params.id;
+    try{
+        const item = await Todo.findById(id);
+        if(!item){
+            return res.status(404).send({
+                status:false,message:'item not found'
+            })
+        }
+        return res.status(200).send({
+            status:true,
+            message:'success',
+            item
+        })
+    }catch(err){
+        return res.status(400).send({
+            status:false,message:err
+        })
+    }
 })
 
 //delete todo ite by id
-router.delete('/:id/delete',(req,res)=>{
-    Todo.findByIdAndDelete(req.params.id)
-    .then((data)=>{
-        res.json({
-            'status':'success',
-            'message':'Delete Successfully'
+router.delete('/delete/:id',async(req,res)=>{
+    try {
+        const item = await Todo.findByIdAndDelete(req.params.id)
+        if(!item){
+            return res.status(404).send({
+                status:false,message:'item not found'
+            })
+        }
+        return res.send({
+            'status':true,
+            'message':'Delete item success'
         })
-    }).catch((err)=>{
-        res.status(400).json({
+    } catch (error) {
+     return res.status(400).send({
         'status':'error',
         'message': err.message
-        })
-    })
+        })   
+    }
 })
 
 module.exports = router
